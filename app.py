@@ -14,12 +14,16 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and user.password == password:
-            session['username'] = user.username
-            user.online = True
-            db.session.commit()
-            return redirect(url_for('dashboard'))
+        try:
+            user = User.query.filter_by(username=username).first()
+            if user and user.password == password:
+                session['username'] = user.username
+                user.online = True
+                db.session.commit()
+                return redirect(url_for('dashboard'))
+        except Exception as e:
+            app.logger.error(f"Database error: {e}")
+            return render_template('login.html', error="An error occurred while logging in.")
     return render_template('login.html')
 
 @app.route('/dashboard')
