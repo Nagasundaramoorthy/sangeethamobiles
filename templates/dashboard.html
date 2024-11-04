@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Welcome, {{ username }}</h1>
+    <h3>Online Users</h3>
+    <ul id="userList">
+        {% for user in users %}
+        <li>
+            <button onclick="startCall('{{ user.username }}')">{{ user.username }}</button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div id="ringing" style="display:none;">
+        <p>Ringing... <span id="incomingCaller"></span></p>
+        <button id="acceptCall" onclick="acceptCall()">Accept</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const username = "{{ username }}";
+
+        // Start a call
+        function startCall(recipient) {
+            socket.emit('initiate_call', {caller: username, recipient: recipient});
+        }
+
+        // Handle incoming call
+        socket.on('incoming_call', (data) => {
+            document.getElementById('ringing').style.display = 'block';
+            document.getElementById('incomingCaller').innerText = data.caller;
+            window.incomingCaller = data.caller;
+        });
+
+        // Accept the call
+        function acceptCall() {
+            socket.emit('accept_call', {caller: window.incomingCaller, recipient: username});
+            document.getElementById('ringing').style.display = 'none';
+            window.location.href = '/video_call';
+        }
+
+        // Handle call acceptance
+        socket.on('call_accepted', (data) => {
+            window.location.href = '/video_call';
+        });
+    </script>
+</body>
+</html>
